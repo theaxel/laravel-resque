@@ -12,9 +12,8 @@
 	],
 	"require": {
 		"php": ">=5.4.0",
-
-		"illuminate/config": "4.1.x",
-		"illuminate/queue": "4.1.x",
+		"illuminate/config": ">=4.1",
+		"illuminate/queue": ">=4.1",
 		"chrisboulton/php-resque": "dev-master"
 	},
 	"suggest": {
