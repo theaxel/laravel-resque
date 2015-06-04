@@ -20,8 +20,8 @@
 		"chrisboulton/php-resque-scheduler": "Enables the use of the ResqueScheduler functionality."
 	},
 	"autoload": {
-		"psr-0": {
-			"Awellis13\\Resque": "src/"
+		"psr-4": {
+			"Awellis13\\Resque\\": "src/"
 		}
 	},
 	"minimum-stability": "dev"
