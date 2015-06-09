@@ -5,7 +5,9 @@ use Exception;
 use Resque;
 use ResqueScheduler;
 use Resque_Event;
+use Resque_Job;
 use Resque_Job_Status;
+use Resque_Stat;
 use Illuminate\Queue\Queue;
 
 /**
@@ -109,6 +111,28 @@ class ResqueQueue extends Queue
             return new ResqueJob($this->container, $this, $job, $queue);
         }
     }
+
+    /**
+     * Release a reserved job back onto the queue.
+     *
+     * @param ResqueJob $job
+     * @param int       $delay
+     *
+     * @return void
+     */
+    public function release(ResqueJob $job, $delay)
+    {
+        $status = new Resque_Job_Status($job->getJobId());
+        $track = false;
+        if ($status->isTracking()) {
+            $track = true;
+        }
+
+        if ($delay > 0 && class_exists('ResqueScheduler')) {
+            ResqueScheduler::enqueueIn($delay, $job->getQueue(), $job->getJobClass(), $job->getArguments());
+        } else {
+            Resque_Job::create($job->getQueue(), $job->getJobClass(), $job->getArguments(), $track, $job->getJobId());
+        }
     }
 
     /**
