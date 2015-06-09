@@ -3,6 +3,7 @@ namespace Awellis13\Resque\Connectors;
 
 use Config;
 use Resque;
+use Resque_Redis;
 use Awellis13\Resque\ResqueQueue;
 use Illuminate\Queue\Connectors\ConnectorInterface;
 
@@ -14,31 +15,17 @@ use Illuminate\Queue\Connectors\ConnectorInterface;
 class ResqueConnector implements ConnectorInterface
 {
     /**
-     * Establish a queue connection.
-     *
-     * @param  array                            $config
-     * @return \Illuminate\Queue\QueueInterface
+     * {@inheritDoc}
      */
     public function connect(array $config)
     {
-        if (!isset($config['host'])) {
-            $config = Config::get('database.redis.default');
+        $config = array_merge(Config::get('database.redis.default', []), $config);
 
-            if (!isset($config['host'])) {
-                $config['host'] = '127.0.0.1';
-            }
-        }
+        Resque::setBackend(
+            array_get($config, 'host', Resque_Redis::DEFAULT_HOST) .':'. array_get($config, 'port', Resque_Redis::DEFAULT_PORT),
+            array_get($config, 'database', Resque_Redis::DEFAULT_DATABASE)
+        );
 
-        if (!isset($config['port'])) {
-            $config['port'] = 6379;
-        }
-
-        if (!isset($config['database'])) {
-            $config['database'] = 0;
-        }
-
-        Resque::setBackend($config['host'].':'.$config['port'], $config['database']);
-
-        return new ResqueQueue;
+        return new ResqueQueue();
     }
 }
