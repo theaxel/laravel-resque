@@ -96,12 +96,18 @@ class ResqueQueue extends Queue
     /**
      * Pop the next job off of the queue.
      *
-     * @param  string                          $queue
+     * @param string $queue
+     *
      * @return \Illuminate\Queue\Jobs\Job|null
      */
     public function pop($queue = null)
     {
-        return Resque::pop($queue);
+        $queue = $queue ?: $this->default;
+        $job = Resque_Job::reserve($queue);
+        if ($job) {
+            return new ResqueJob($this->container, $this, $job, $queue);
+        }
+    }
     }
 
     /**
