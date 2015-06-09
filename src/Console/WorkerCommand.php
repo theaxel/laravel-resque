@@ -17,15 +17,6 @@ use Symfony\Component\Console\Output\OutputInterface;
 class WorkerCommand extends Command
 {
     /**
-     * The console command name.
-     *
-     * @var string
-     */
-    protected $name = 'queue:work';
-
-    protected $description = 'Run a resque worker';
-
-    /**
      * Create a new command instance.
      *
      *
@@ -36,7 +27,7 @@ class WorkerCommand extends Command
         $this->setDefinition(new InputDefinition());
 
         $this->setName($this->name);
-        $this->setDescription('Run a resque worker');
+        $this->setDescription($this->description);
         $this->configure();
 
         $this->specifyParameters();
