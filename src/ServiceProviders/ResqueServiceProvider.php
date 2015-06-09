@@ -4,6 +4,8 @@ namespace Awellis13\Resque\ServiceProviders;
 use Config;
 use Awellis13\Resque\Connectors\ResqueConnector;
 use Awellis13\Resque\Console\ListenCommand;
+use Awellis13\Resque\Console\WorkerCommand;
+use Awellis13\Resque\ResqueWorker;
 use Illuminate\Queue\QueueServiceProvider;
 
 /**
@@ -69,5 +71,31 @@ class ResqueServiceProvider extends QueueServiceProvider
         });
 
         $this->commands('command.resque.listen');
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    protected function registerWorker()
+    {
+        $this->registerWorkCommand();
+
+        $this->registerRestartCommand();
+
+        $this->app->singleton('queue.worker', function ($app, $queues, $connectionName = null) {
+            return new ResqueWorker($app['queue'], $connectionName, $queues, $app['queue.failer'], $app['events']);
+        });
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    protected function registerWorkCommand()
+    {
+        $this->app->singleton('command.queue.work', function ($app) {
+            return new WorkerCommand();
+        });
+
+        $this->commands('command.queue.work');
     }
 }
