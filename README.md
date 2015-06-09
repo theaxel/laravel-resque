@@ -1,6 +1,7 @@
 ## Laravel Resque
 
-This package allows you to connect to Resque when using `Queue`. 
+This package allows you to connect to Resque when using `Queue`.
+Tries to work as closely as possible to the resque standard.
 
 ## Requirements
 
@@ -15,7 +16,7 @@ This package allows you to connect to Resque when using `Queue`.
 First you need to add the following to your project's `composer.json`:
 
     "require": {
-    	"awellis13/laravel-resque": "1.2.x"
+    	"awellis13/laravel-resque": "2.0.x"
     }
 
 Now you need to run the following to install the package:
@@ -46,6 +47,8 @@ If you choose to not use this driver as your default Queue driver you can call a
 ### Enqueing a Job
 
 	Queue::push('JobName', ['name' => 'Andrew']);
+    # Loading a class from DI container and pushing it on the queue.
+    Queue::push(App::make('JobName'), ['name' => 'Andrew']);
 
 ### Tracking a Job
 
@@ -61,6 +64,7 @@ If you choose to not use this driver as your default Queue driver you can call a
 
 - [PHP-Resque](https://github.com/chrisboulton/php-resque)
 - [PHP-Resque-Scheduler](https://github.com/chrisboulton/php-resque-scheduler)
+- [Ruby Resque-Lib which also provides a webinterface to queues](https://github.com/resque/resque)
 
 ## License
 
