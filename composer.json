@@ -1,6 +1,6 @@
 {
 	"name": "awellis13/laravel-resque",
-	"version": "1.2.2",
+	"version": "2.0.0",
 	"description": "Laravel Resque connector for Queue.",
 	"keywords": ["laravel", "resque", "queue"],
 	"license": "MIT",
