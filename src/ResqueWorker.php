@@ -7,6 +7,7 @@ use Illuminate\Queue\Failed\FailedJobProviderInterface;
 use Illuminate\Queue\QueueManager;
 use Illuminate\Queue\Worker;
 use Exception;
+
 /**
  * Extends the normal laravel worker with resque functionality.
  * Sets worker states etc in redis and updates job status.
@@ -23,6 +24,9 @@ class ResqueWorker extends Worker
 
     /* @var Exception */
     private $lastException;
+
+    /* @var boolean Whether the worker daemon should shut down on the next cycle */
+    private $shutdown = false;
 
     /**
      * Create a new queue worker.
@@ -54,6 +58,7 @@ class ResqueWorker extends Worker
     {
         $this->id = $this->getHostname() . ':'.getmypid() . ':' . $this->queues;
         $this->pruneDeadWorkers();
+        $this->registerSigHandlers();
     }
 
     /**
@@ -140,6 +145,22 @@ class ResqueWorker extends Worker
     }
 
     /**
+     *  Force an immediate shutdown of the worker.
+     */
+    public function shutDownNow()
+    {
+        $this->shutdown = true;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    protected function queueShouldRestart($lastRestart)
+    {
+        return $this->shutdown || parent::queueShouldRestart($lastRestart);
+    }
+
+    /**
      * Look for any workers which should be running on this server and if
      * they're not, remove them from Redis.
      *
@@ -186,5 +207,24 @@ class ResqueWorker extends Worker
     private function getHostname()
     {
         return gethostname();
+    }
+
+    /**
+     * Register signal handlers that a worker should respond to.
+     *
+     * TERM: Shutdown immediately and stop processing jobs.
+     * INT: Shutdown immediately and stop processing jobs.
+     * QUIT: Shutdown after the current job finishes processing.
+     */
+    private function registerSigHandlers()
+    {
+        if (!function_exists('pcntl_signal')) {
+            return;
+        }
+
+        declare(ticks = 1);
+        pcntl_signal(SIGTERM, array($this, 'shutDownNow'));
+        pcntl_signal(SIGINT, array($this, 'shutDownNow'));
+        pcntl_signal(SIGQUIT, array($this, 'shutDownNow'));
     }
 }
