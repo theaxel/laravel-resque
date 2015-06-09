@@ -212,7 +212,75 @@ class ResqueQueue extends Queue
     }
 
     /**
-     * Get the queue or return the default.
+     * Returns all ids from workers registrated in resque.
+     *
+     * @return array
+     */
+    public function allWorkers()
+    {
+        $workers = Resque::redis()->smembers('workers');
+        if (!is_array($workers)) {
+            $workers = [];
+        }
+
+        return $workers;
+    }
+
+    /**
+     * Register this worker in Redis.
+     *
+     * @param ResqueWorker $worker
+     */
+    public function registerWorker(ResqueWorker $worker)
+    {
+        Resque::redis()->sadd('workers', (string) $worker);
+        Resque::redis()->set('worker:' . $worker . ':started', strftime('%a %b %d %H:%M:%S %Z %Y'));
+    }
+
+    /**
+     * Unregister this worker in Redis. (shutdown etc)
+     *
+     * @param ResqueWorker|string $worker
+     */
+    public function unregisterWorker($worker)
+    {
+        $workerId = is_object($worker) ? (string) $worker : $worker;
+
+        Resque::redis()->srem('workers', $workerId);
+        Resque::redis()->del('worker:' . $workerId);
+        Resque::redis()->del('worker:' . $workerId . ':started');
+        Resque_Stat::clear('processed:' . $workerId);
+        Resque_Stat::clear('failed:' . $workerId);
+    }
+
+    /**
+     * Tell Redis which job we're currently working on.
+     *
+     * @param ResqueWorker $worker
+     * @param object $job Resque_Job instance containing the job we're working on.
+     */
+    public function workingOn(ResqueWorker $worker, ResqueJob $job)
+    {
+        $data = json_encode([
+            'queue' => $job->getQueue(),
+            'run_at' => strftime('%a %b %d %H:%M:%S %Z %Y'),
+            'payload' => $job->getResqueJob()->payload,
+        ]);
+        Resque::redis()->set('worker:' . $worker, $data);
+    }
+
+    /**
+     * Notify Redis that we've finished working on a job, clearing the working
+     * state and incrementing the job stats.
+     * @param ResqueWorker $worker
+     */
+    public function doneWorking(ResqueWorker $worker)
+    {
+        Resque_Stat::incr('processed');
+        Resque_Stat::incr('processed:' . $worker);
+        Resque::redis()->del('worker:' . $worker);
+    }
+
     /**
      * Create a payload string from the given job and data.
      *
