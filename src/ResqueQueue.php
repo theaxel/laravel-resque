@@ -45,8 +45,9 @@ class ResqueQueue extends Queue
     public function push($job, $data = [], $queue = null, $track = false)
     {
         $queue = (is_null($queue) ? $job : $queue);
+        $data = $data == '' ? [] : $data;
 
-        return Resque::enqueue($queue, $job, $data, $track);
+        return Resque::enqueue($queue, $this->getJobClass($job), $this->createPayload($job, $data), $track);
     }
 
     /**
@@ -87,9 +88,9 @@ class ResqueQueue extends Queue
         $queue = (is_null($queue) ? $job : $queue);
 
         if (is_int($delay)) {
-            ResqueScheduler::enqueueIn($delay, $queue, $job, $data);
+            ResqueScheduler::enqueueIn($delay, $queue, $this->getJobClass($job), $this->createPayload($job, $data));
         } else {
-            ResqueScheduler::enqueueAt($delay, $queue, $job, $data);
+            ResqueScheduler::enqueueAt($delay, $queue, $this->getJobClass($job), $this->createPayload($job, $data));
         }
     }
 
@@ -188,12 +189,49 @@ class ResqueQueue extends Queue
 
     /**
      * Get the queue or return the default.
+    /**
+     * Create a payload string from the given job and data.
      *
-     * @param  string|null $queue
+     * @param  string  $job
+     * @param  mixed   $data
+     * @param  string  $queue Obsolete parameter but required because of inheritance.
+     *
+     * @return string JSON encoded
+     */
+    protected function createPayload($job, $data = '', $queue = null)
+    {
+        $payload = parent::createPayload($job);
+        $payload = json_decode($payload, true);
+
+        // Extract serialized command from data payload.
+        if (isset($payload['data']['command'])) {
+            $payload['command'] = $payload['data']['command'];
+            unset($payload['data']['command']);
+        }
+
+        if (!isset($payload['attempts'])) {
+            $payload['attempts'] = 1;
+        }
+
+        if (!$payload['data']) {
+            unset($payload['data']);
+        }
+
+        return array_merge($this->prepareQueueableEntities($data), $payload);
+    }
+
+    /**
+     * Get the class of the provided job which can either be a class or plain string.
+     * @param mixed $job
+     *
      * @return string
      */
-    protected function getQueue($queue)
+    protected function getJobClass($job)
     {
-        return $queue ? : $this->default;
+        if (is_object($job)) {
+            return get_class($job);
+        } else {
+            return $job;
+        }
     }
 }
