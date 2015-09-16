@@ -1,7 +1,7 @@
 ## Laravel Resque
 
 This package allows you to connect to Resque when using `Queue`.
-Tries to work as closely as possible to the resque standard.
+Tries to work as closely as possible to the resque standard so it can used with resque web interface from ruby gem as well.
 
 ## Requirements
 
