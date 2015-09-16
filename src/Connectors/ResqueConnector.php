@@ -3,6 +3,7 @@ namespace Awellis13\Resque\Connectors;
 
 use Config;
 use Resque;
+use Resque_Failure;
 use Resque_Redis;
 use Awellis13\Resque\ResqueQueue;
 use Illuminate\Queue\Connectors\ConnectorInterface;
@@ -25,6 +26,8 @@ class ResqueConnector implements ConnectorInterface
             array_get($config, 'host', Resque_Redis::DEFAULT_HOST) .':'. array_get($config, 'port', Resque_Redis::DEFAULT_PORT),
             array_get($config, 'database', Resque_Redis::DEFAULT_DATABASE)
         );
+
+        Resque_Failure::setBackend('Awellis13\Resque\Failure\Redis');
 
         return new ResqueQueue();
     }
