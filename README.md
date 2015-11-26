@@ -6,8 +6,8 @@ Tries to work as closely as possible to the resque standard so it can used with 
 ## Requirements
 
 - PHP 5.4+
-- Illuminate\Config 4.1+
-- Illuminate\Queue 4.1+
+- Illuminate\Config 4+
+- Illuminate\Queue 4+
 - Resque 1.2
 - ResqueScheduler 1.1 (Optional)
 
